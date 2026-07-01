@@ -1,11 +1,10 @@
 <?php
-define('DB_HOST', '0xxegx.h.filess.io');
-define('DB_USER', 'studybuddy_anglefolks');
-define('DB_PORT', '3307');
-define('DB_PASS', '8b0d4c839d7807ae913759a415cd7bd6baa9c574');
-define('DB_NAME', 'studybuddy_anglefolks');
+define('DB_HOST', 'localhost');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('DB_NAME', 'studybuddy');
 
-$conn = mysqli_connect(DB_HOST, DB_USER, DB_PORT, DB_PASS, DB_NAME);
+$conn = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if (!$conn) die('Koneksi gagal: ' . mysqli_connect_error());
 mysqli_set_charset($conn, 'utf8mb4');
 
