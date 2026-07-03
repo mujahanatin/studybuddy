@@ -57,6 +57,7 @@ $courses = mysqli_query($conn,
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Matkul — StudyBuddy</title>
 <link rel="stylesheet" href="assets/css/main.css">
+<script src="assets/js/notif.js" defer></script>
 </head>
 <body>
 <div class="app-layout">
@@ -65,6 +66,7 @@ $courses = mysqli_query($conn,
     <div class="topbar">
       <h1>Matkul</h1>
       <div class="topbar-right">
+        <div class="notif-bell-wrap" id="notif-bell-wrap"></div>
         <button class="btn primary" onclick="openModal('modal-add')">+ Tambah Matkul</button>
         <?= avatarHtml($_SESSION["full_name"], mysqli_fetch_assoc(mysqli_query($conn,"SELECT avatar FROM users WHERE id=$uid"))["avatar"] ?? null, 36) ?>
       </div>
@@ -94,8 +96,8 @@ $courses = mysqli_query($conn,
             </div>
             <div class="progress-bar"><div class="progress-fill" style="width:<?= $pct ?>%;background:<?= e($c['color']) ?>"></div></div>
             <div class="cc-meta">
-              <span>📝 <?= $c['note_count'] ?> catatan</span>
-              <?php if($c['task_count']>0): ?><span style="color:var(--red)">📋 <?= $c['task_count'] ?> tugas</span><?php endif; ?>
+              <span>📝<?= $c['note_count'] ?> catatan</span>
+              <?php if($c['task_count']>0): ?><span style="color:var(--red)">📋<?= $c['task_count'] ?> tugas</span><?php endif; ?>
             </div>
           </a>
         </div>
@@ -111,7 +113,7 @@ $courses = mysqli_query($conn,
 <!-- Modal tambah matkul -->
 <div class="modal-overlay" id="modal-add">
   <div class="modal">
-    <h3>➕ Tambah Matkul Baru</h3>
+    <h3>Tambah Matkul Baru</h3>
     <form method="POST">
       <div class="form-group">
         <label>Nama Matkul *</label>

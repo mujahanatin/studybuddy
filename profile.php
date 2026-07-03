@@ -67,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['remove_avatar'])) {
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Profil Saya — StudyBuddy</title>
 <link rel="stylesheet" href="assets/css/main.css">
+<script src="assets/js/notif.js" defer></script>
 <style>
 .profile-wrap{max-width:560px;margin:0 auto}
 .profile-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px}
@@ -96,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['remove_avatar'])) {
     <div class="topbar">
       <h1>👤 Profil Saya</h1>
       <div class="topbar-right">
+        <div class="notif-bell-wrap" id="notif-bell-wrap"></div>
         <?= avatarHtml($user['full_name'], $user['avatar'], 36) ?>
       </div>
     </div>
@@ -120,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['remove_avatar'])) {
                 <?php endif; ?>
 
                 <label class="avatar-upload-btn" title="Ganti foto">
-                  ⛶
+                  📷
                   <input type="file" name="avatar" id="avatar-input" accept="image/jpeg,image/png,image/webp" onchange="previewAvatar(this)">
                 </label>
               </div>
@@ -147,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['remove_avatar'])) {
             </div>
 
             <div class="profile-actions">
-              <button type="submit" name="update_profile" class="btn primary">Simpan Perubahan</button>
+              <button type="submit" name="update_profile" class="btn primary">💾 Simpan Perubahan</button>
             </div>
           </form>
 

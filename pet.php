@@ -17,10 +17,10 @@ $pid = $pet['id'];
 // ── Konstanta growth ──
 $XP_PER_LEVEL = 100;
 $stages = [
-    ['min'=>0,  'max'=>1,  'stage'=>'Amink',   'emoji'=>'🥚', 'label'=>'Telur'],
-    ['min'=>2,  'max'=>4,  'stage'=>'Ponyo',  'emoji'=>'🐣', 'label'=>'Bayi'],
-    ['min'=>5,  'max'=>9,  'stage'=>'Shuihi',  'emoji'=>'🐥', 'label'=>'Remaja'],
-    ['min'=>10, 'max'=>999,'stage'=>'Felix', 'emoji'=>'🦁', 'label'=>'Dewasa'],
+    ['min'=>0,  'max'=>1,  'stage'=>'amink',   'emoji'=>'🥚', 'label'=>'amink'],
+    ['min'=>2,  'max'=>4,  'stage'=>'ponyo',  'emoji'=>'🐣', 'label'=>'ponyo'],
+    ['min'=>5,  'max'=>9,  'stage'=>'shuihi',  'emoji'=>'🐥', 'label'=>'shuihi'],
+    ['min'=>10, 'max'=>999,'stage'=>'felix', 'emoji'=>'🐦', 'label'=>'felix'],
 ];
 
 function getStage($level, $stages) {
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             mysqli_query($conn,"UPDATE pets SET xp=xp+$xp, last_fed=NOW() WHERE id=$pid");
             mysqli_query($conn,"INSERT INTO pet_interactions (pet_id,type,xp_gained) VALUES ($pid,'feed',$xp)");
             $xp_gained_msg = $xp;
-            $msg = 'success:+20 XP! Pet kamu senang kenyang!';
+            $msg = 'success:+20 XP! aku kenyang!';
         }
     }
 
@@ -84,13 +84,13 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $cooldown = 1800; // 30 menit cooldown
         if (time() - $last_played < $cooldown) {
             $wait = ceil(($cooldown - (time()-$last_played)) / 60);
-            $msg = 'error:Pet masih kelelahan! Tunggu '.$wait.' menit lagi.';
+            $msg = 'error:Aku kelelahan! Tunggu '.$wait.' menit lagi yaa.';
         } else {
             $xp = 25;
             mysqli_query($conn,"UPDATE pets SET xp=xp+$xp, last_played=NOW() WHERE id=$pid");
             mysqli_query($conn,"INSERT INTO pet_interactions (pet_id,type,xp_gained) VALUES ($pid,'play',$xp)");
             $xp_gained_msg = $xp;
-            $msg = 'success:+25 XP! Pet kamu senang diajak main! 🎮';
+            $msg = 'success:+25 XP! Aku senang diajak main!';
         }
     }
 
@@ -105,9 +105,9 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             mysqli_query($conn,"UPDATE pets SET xp=xp+$xp WHERE id=$pid");
             mysqli_query($conn,"INSERT INTO pet_interactions (pet_id,type,xp_gained) VALUES ($pid,'poke',$xp)");
             $xp_gained_msg = $xp;
-            $msg = 'success:+5 XP! Pet kamu suka dielus!';
+            $msg = 'success:+5 XP! Aku suka dielus!';
         } else {
-            $msg = 'error:Pet sedang malu-malu, tunggu sebentar ya!';
+            $msg = 'error:Aku malu-malu, tunggu sebentar ya!';
         }
     }
 
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         if ($new_level != $pet['level']) {
             $new_stage = getStage($new_level, $stages);
             mysqli_query($conn,"UPDATE pets SET level=$new_level, stage='".$new_stage['stage']."' WHERE id=$pid");
-            $msg = 'success: LEVEL UP! '.$new_level.' dan menjadi '.$new_stage['label'].'! '.$new_stage['emoji'];
+            $msg = 'success:LEVEL UP!'.$new_level.' dan menjadi '.$new_stage['label'].'! '.$new_stage['emoji'];
         }
     }
 
@@ -150,17 +150,17 @@ $total_interactions = (int)mysqli_fetch_row(mysqli_query($conn,
 $last_any = mysqli_fetch_row(mysqli_query($conn,
     "SELECT TIMESTAMPDIFF(HOUR,interaction_at,NOW()) FROM pet_interactions WHERE pet_id=$pid ORDER BY interaction_at DESC LIMIT 1"));
 $hours_since = $last_any ? (int)$last_any[0] : 999;
-if ($hours_since < 1)      { $mood = '૮₍ ˃ ⤙ ˂ ₎ა'; $mood_label = 'Sangat Senang'; }
-elseif ($hours_since < 6)  { $mood = '૮₍ ˶ᵔ ᵕ ᵔ˶ ₎ა'; $mood_label = 'Senang'; }
-elseif ($hours_since < 24) { $mood = '૮₍´˶• . • ⑅ ₎ა'; $mood_label = 'Biasa'; }
-else                        { $mood = '>ࡇ<'; $mood_label = 'Kangen kamu!'; }
+if ($hours_since < 1)      { $mood = '૮₍ ˃ ⤙ ˂ ₎ა'; $mood_label = 'Seneng bangeet'; }
+elseif ($hours_since < 6)  { $mood = '૮₍ ˶ᵔ ᵕ ᵔ˶ ₎ა'; $mood_label = 'Seneng'; }
+elseif ($hours_since < 24) { $mood = '૮₍´˶• . • ⑅ ₎ა'; $mood_label = 'Biasa ajaa'; }
+else                        { $mood = '૮◞ ‸ ◟ ა'; $mood_label = 'Kangen bangeet huhuu!'; }
 
 // Pesan random pet
 $pet_messages = [
     'egg'   => ['Aku masih di dalam telur...','Kapan aku menetas ya?','Hmm, hangat sekali di sini...'],
-    'baby'  => ['Hai! Aku baru lahir!','Aku lapar! Kasih makan..','Main yuk! Main yuk! ','Kamu baik banget deh!'],
-    'teen'  => ['Aku udah mulai besar nih!',' semangat belajarnya ya!','Aku senang bisa tumbuh bersamamu! ','Hari ini belajar apa?'],
-    'adult' => ['Aku sudah dewasa! Terima kasih selalu merawatku','Kita sudah lama bersama ya','Semangat terus kuliahnya!','Kamu adalah teman terbaikku!'],
+    'baby'  => ['Hai! Aku baru lahir!','Aku lapar! Kasih makan dong~ ','Main yuk! Main yuk! ','Kamu baik banget deh! '],
+    'teen'  => ['Aku udah mulai besar nih! ','Terus semangat belajarnya ya! ','Aku senang bisa tumbuh bersamamu! ','Hari ini belajar apa? '],
+    'adult' => ['Aku sudah dewasa! Terima kasih selalu merawatku 🐦','Kita sudah lama bersama ya~ 💖','Semangat terus kuliahnya! Aku selalu di sini 🌟','Kamu adalah teman terbaikku! 🥰'],
 ];
 $current_messages = $pet_messages[$stage_info['stage']] ?? $pet_messages['baby'];
 $random_msg = $current_messages[array_rand($current_messages)];
@@ -180,6 +180,7 @@ if ($age_days === 0) {
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pet-ku — StudyBuddy</title>
 <link rel="stylesheet" href="assets/css/main.css">
+<script src="assets/js/notif.js" defer></script>
 <style>
 .pet-page{display:grid;grid-template-columns:360px 1fr;gap:20px;align-items:start}
 
@@ -279,6 +280,7 @@ if ($age_days === 0) {
     <div class="topbar">
       <h1><?= $stage_info['emoji'] ?> Pet-ku</h1>
       <div class="topbar-right">
+        <div class="notif-bell-wrap" id="notif-bell-wrap"></div>
         <?= avatarHtml($_SESSION["full_name"], mysqli_fetch_assoc(mysqli_query($conn,"SELECT avatar FROM users WHERE id=$uid"))["avatar"] ?? null, 36) ?>
       </div>
     </div>
@@ -308,7 +310,7 @@ if ($age_days === 0) {
 
             <div class="pet-stage-badge"><?= $stage_info['label'] ?></div>
             <div class="pet-name-display"><?= e($pet['name']) ?></div>
-            <div class="pet-age-display">Umur: <b><?= $age_str ?></b></div>
+            <div class="pet-age-display">🎂 Umur: <b><?= $age_str ?></b></div>
             <div class="pet-mood"><?= $mood ?> Mood: <b><?= $mood_label ?></b></div>
 
             <!-- XP Bar -->
@@ -345,21 +347,21 @@ if ($age_days === 0) {
             <div class="pet-actions">
               <form method="POST">
                 <button type="submit" name="feed" class="pet-action-btn feed" <?= !$can_feed?'disabled':'' ?>>
-                  Kasih Makan <?= !$can_feed ? '('.$feed_wait.' mnt lagi)' : '' ?>
+                  🍎 Kasih Makan <?= !$can_feed ? '('.$feed_wait.' mnt lagi)' : '' ?>
                 </button>
               </form>
               <form method="POST">
                 <button type="submit" name="play" class="pet-action-btn play" <?= !$can_play?'disabled':'' ?>>
-                  Ajak Main <?= !$can_play ? '('.$play_wait.' mnt lagi)' : '' ?>
+                  🎮 Ajak Main <?= !$can_play ? '('.$play_wait.' mnt lagi)' : '' ?>
                 </button>
               </form>
               <button type="button" class="pet-action-btn poke" onclick="openModal('modal-rename')">
-                Ganti Nama
+                ✏️ Ganti Nama
               </button>
             </div>
 
             <div class="cooldown-hint" style="margin-top:10px">
-              Klik emoji pet di atas untuk mengelus (+5 XP)
+              💡 Klik emoji pet di atas untuk mengelus (+5 XP)
             </div>
           </div>
         </div>
@@ -369,7 +371,7 @@ if ($age_days === 0) {
 
           <!-- Track pertumbuhan -->
           <div class="stages-card">
-            <div class="section-title">Pertumbuhan Pet</div>
+            <div class="section-title">🌱 Pertumbuhan Pet</div>
             <div class="stages-track">
               <?php foreach ($stages as $i => $s):
                 $is_current = $stage_info['stage'] === $s['stage'];
@@ -391,7 +393,7 @@ if ($age_days === 0) {
 
           <!-- Cara mendapat XP -->
           <div class="tips-card">
-            <div class="section-title">Cara Menambah XP</div>
+            <div class="section-title">⚡ Cara Menambah XP</div>
             <div class="tip-item"><span class="tip-icon">💬</span><span><b>Chat dengan teman</b> → +5 XP setiap pesan yang dikirim</span></div>
             <div class="tip-item"><span class="tip-icon">🍎</span><span><b>Kasih makan</b> → +20 XP (cooldown 1 jam)</span></div>
             <div class="tip-item"><span class="tip-icon">🎮</span><span><b>Ajak main</b> → +25 XP (cooldown 30 menit)</span></div>
@@ -401,7 +403,7 @@ if ($age_days === 0) {
 
           <!-- Log aktivitas -->
           <div class="activity-card">
-            <div class="section-title">Aktivitas Terakhir</div>
+            <div class="section-title">📋 Aktivitas Terakhir</div>
             <?php if (empty($interactions)): ?>
               <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">
                 Belum ada aktivitas. Mulai interaksi dengan pet!
@@ -437,7 +439,7 @@ if ($age_days === 0) {
 <!-- Modal ganti nama -->
 <div class="modal-overlay" id="modal-rename">
   <div class="modal">
-    <h3>Ganti Nama Pet</h3>
+    <h3>✏️ Ganti Nama Pet</h3>
     <form method="POST">
       <div class="form-group">
         <label>Nama baru untuk <?= e($pet['name']) ?></label>

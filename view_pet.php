@@ -98,6 +98,7 @@ function avatarInit($str)  { return strtoupper(substr($str,0,2)); }
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pet <?= e($friend['full_name']) ?> — StudyBuddy</title>
 <link rel="stylesheet" href="assets/css/main.css">
+<script src="assets/js/notif.js" defer></script>
 <style>
 .pet-page{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
 .pet-main-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;text-align:center}
@@ -171,6 +172,7 @@ function avatarInit($str)  { return strtoupper(substr($str,0,2)); }
         <h1><?= $no_pet ? '🐾' : $stage_info['emoji'] ?> Pet milik <?= e($friend['full_name']) ?></h1>
       </div>
       <div class="topbar-right">
+        <div class="notif-bell-wrap" id="notif-bell-wrap"></div>
         <a href="chat.php?with=<?= $friend_id ?>" class="btn primary">💬 Chat</a>
         <div class="avatar-circle"><?= $initials ?></div>
       </div>

@@ -90,6 +90,7 @@ function timeAgo($dt) {
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Chat — StudyBuddy</title>
 <link rel="stylesheet" href="assets/css/main.css">
+<script src="assets/js/notif.js" defer></script>
 <style>
 /* Override page-body padding untuk chat */
 .chat-layout{display:flex;height:calc(100vh - 61px);overflow:hidden}
@@ -140,8 +141,9 @@ function timeAgo($dt) {
   <?php require_once 'includes/sidebar.php'; ?>
   <div class="main-content" style="overflow:hidden">
     <div class="topbar">
-      <h1>💬 Chat</h1>
+      <h1>Chat</h1>
       <div class="topbar-right">
+        <div class="notif-bell-wrap" id="notif-bell-wrap"></div>
         <?= avatarHtml($_SESSION["full_name"], mysqli_fetch_assoc(mysqli_query($conn,"SELECT avatar FROM users WHERE id=$uid"))["avatar"] ?? null, 36) ?>
       </div>
     </div>
@@ -149,7 +151,7 @@ function timeAgo($dt) {
     <div class="chat-layout">
       <!-- Panel kiri: daftar teman -->
       <div class="chat-list">
-        <div class="chat-list-header">💬 Percakapan</div>
+        <div class="chat-list-header">Percakapan</div>
         <div class="chat-list-body">
           <?php if (empty($friends_list)): ?>
             <div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">
@@ -193,7 +195,7 @@ function timeAgo($dt) {
               <div style="font-size:12px;color:var(--muted)">@<?= e($with_user['username']) ?></div>
             </div>
             <div style="margin-left:auto">
-              <a href="friends.php" class="btn sm">👥 Profil</a>
+              <a href="friends.php" class="btn sm">Profil</a>
             </div>
           </div>
 
@@ -201,7 +203,7 @@ function timeAgo($dt) {
           <div class="chat-messages" id="chat-messages">
             <?php if (empty($messages)): ?>
               <div style="text-align:center;color:var(--muted);font-size:13px;margin:auto">
-                Belum ada pesan. Mulai percakapan! 👋
+                Belum ada pesan. Mulai percakapan!
               </div>
             <?php endif; ?>
 

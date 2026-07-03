@@ -36,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['done_task'])) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Dashboard — StudyBuddy</title>
 <link rel="stylesheet" href="assets/css/main.css">
+<script src="assets/js/notif.js" defer></script>
 </head>
 <body>
 <div class="app-layout">
@@ -45,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['done_task'])) {
     <div class="topbar">
       <h1>Dashboard</h1>
       <div class="topbar-right">
-        <span style="font-size:13px;color:var(--muted)"><?= date('l, d F Y') ?></span>
+        <div class="notif-bell-wrap" id="notif-bell-wrap"></div>
         <?= avatarHtml($_SESSION['full_name'], mysqli_fetch_assoc(mysqli_query($conn,"SELECT avatar FROM users WHERE id=$uid"))['avatar'] ?? null, 36) ?>
       </div>
     </div>
@@ -96,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['done_task'])) {
           <div class="dl-done">
             <form method="POST">
               <input type="hidden" name="done_task" value="<?= $t['id'] ?>">
-              <button type="submit" class="btn sm" title="Tandai selesai">✓ Selesai</button>
+              <button type="submit" class="btn sm" title="Tandai selesai">Selesai</button>
             </form>
           </div>
         </div>

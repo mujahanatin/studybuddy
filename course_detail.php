@@ -69,7 +69,38 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['done_task'])) {
     $msg = 'success:Tugas selesai!';
 }
 
-// Hapus tugas
+// Kirim catatan ke teman
+if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['share_note'])) {
+    $nid      = (int)$_POST['note_id'];
+    $to_id    = (int)$_POST['to_friend'];
+    $shr_msg  = trim($_POST['share_msg'] ?? '');
+    // Pastikan catatan milik user & target adalah teman
+    $note_ok = mysqli_fetch_row(mysqli_query($conn,"SELECT id FROM notes WHERE id=$nid AND user_id=$uid"));
+    $friend_ok = mysqli_fetch_row(mysqli_query($conn,"SELECT id FROM friends WHERE user_id=$uid AND friend_id=$to_id AND status='accepted'"));
+    if ($note_ok && $friend_ok) {
+        $st = mysqli_prepare($conn,"INSERT INTO shared_notes (note_id,sender_id,receiver_id,message) VALUES (?,?,?,?)");
+        mysqli_stmt_bind_param($st,'iiis',$nid,$uid,$to_id,$shr_msg);
+        mysqli_stmt_execute($st);
+        $msg = 'success:Catatan berhasil dikirim ke teman!';
+    } else { $msg = 'error:Tidak bisa mengirim catatan ini.'; }
+}
+
+// Kirim tugas ke teman
+if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['share_task'])) {
+    $tid      = (int)$_POST['task_id'];
+    $to_id    = (int)$_POST['to_friend'];
+    $shr_msg  = trim($_POST['share_msg'] ?? '');
+    $task_ok   = mysqli_fetch_row(mysqli_query($conn,"SELECT id FROM tasks WHERE id=$tid AND user_id=$uid"));
+    $friend_ok = mysqli_fetch_row(mysqli_query($conn,"SELECT id FROM friends WHERE user_id=$uid AND friend_id=$to_id AND status='accepted'"));
+    if ($task_ok && $friend_ok) {
+        $st = mysqli_prepare($conn,"INSERT INTO shared_tasks (task_id,sender_id,receiver_id,message) VALUES (?,?,?,?)");
+        mysqli_stmt_bind_param($st,'iiis',$tid,$uid,$to_id,$shr_msg);
+        mysqli_stmt_execute($st);
+        $msg = 'success:Tugas berhasil dikirim ke teman!';
+    } else { $msg = 'error:Tidak bisa mengirim tugas ini.'; }
+}
+
+// Hapus tugas (Bagian ini yang sebelumnya error & sudah diperbaiki)
 if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['del_task'])) {
     $tid = (int)$_POST['del_task'];
     mysqli_query($conn,"DELETE FROM tasks WHERE id=$tid AND user_id=$uid");
@@ -78,6 +109,13 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['del_task'])) {
 
 $notes = mysqli_query($conn,"SELECT * FROM notes WHERE course_id=$cid AND user_id=$uid ORDER BY created_at DESC");
 $tasks = mysqli_query($conn,"SELECT * FROM tasks WHERE course_id=$cid AND user_id=$uid ORDER BY status ASC, deadline ASC");
+
+// Daftar teman untuk dropdown kirim
+$friends_list = mysqli_fetch_all(mysqli_query($conn,
+    "SELECT u.id, u.full_name FROM friends f
+     JOIN users u ON u.id=f.friend_id
+     WHERE f.user_id=$uid AND f.status='accepted'
+     ORDER BY u.full_name ASC"), MYSQLI_ASSOC);
 [$msg_type,$msg_text] = $msg ? explode(':',$msg,2) : ['',''];
 ?>
 <!DOCTYPE html>
@@ -86,6 +124,7 @@ $tasks = mysqli_query($conn,"SELECT * FROM tasks WHERE course_id=$cid AND user_i
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title><?= e($course['name']) ?> — StudyBuddy</title>
 <link rel="stylesheet" href="assets/css/main.css">
+<script src="assets/js/notif.js" defer></script>
 </head>
 <body>
 <div class="app-layout">
@@ -103,6 +142,7 @@ $tasks = mysqli_query($conn,"SELECT * FROM tasks WHERE course_id=$cid AND user_i
         </div>
       </div>
       <div class="topbar-right">
+        <div class="notif-bell-wrap" id="notif-bell-wrap"></div>
         <button class="btn primary" onclick="openModal('modal-note')">+ Catatan</button>
         <button class="btn" onclick="openModal('modal-task')">+ Tugas</button>
         <?= avatarHtml($_SESSION["full_name"], mysqli_fetch_assoc(mysqli_query($conn,"SELECT avatar FROM users WHERE id=$uid"))["avatar"] ?? null, 36) ?>
@@ -143,6 +183,9 @@ $tasks = mysqli_query($conn,"SELECT * FROM tasks WHERE course_id=$cid AND user_i
                 <input type="hidden" name="del_note" value="<?= $n['id'] ?>">
                 <button type="submit" class="btn sm danger">🗑 Hapus</button>
               </form>
+              <?php if (!empty($friends_list)): ?>
+              <button type="button" class="btn sm" onclick="openShareModal('note',<?= $n['id'] ?>, '<?= e(addslashes($n['pertemuan']?:$n['title']?:'Catatan')) ?>')">📤 Kirim ke Teman</button>
+              <?php endif; ?>
             </div>
           </div>
           <?php endwhile; ?>
@@ -184,6 +227,9 @@ $tasks = mysqli_query($conn,"SELECT * FROM tasks WHERE course_id=$cid AND user_i
               <input type="hidden" name="del_task" value="<?= $t['id'] ?>">
               <button type="submit" class="task-del">✕</button>
             </form>
+            <?php if (!empty($friends_list)): ?>
+            <button type="button" class="btn sm" style="margin-left:4px" onclick="openShareModal('task',<?= $t['id'] ?>, '<?= e(addslashes($t['title'])) ?>')">📤</button>
+            <?php endif; ?>
           </div>
           <?php endwhile; ?>
         </div>
@@ -241,25 +287,66 @@ $tasks = mysqli_query($conn,"SELECT * FROM tasks WHERE course_id=$cid AND user_i
   <img id="lightbox-img" src="" alt="Foto catatan">
 </div>
 
+<!-- Modal kirim catatan/tugas ke teman -->
+<div class="modal-overlay" id="modal-share">
+  <div class="modal">
+    <h3 id="share-modal-title">Kirim</h3>
+    <form method="POST">
+      <input type="hidden" name="share_type" id="share-type">
+      <input type="hidden" name="note_id"    id="share-note-id">
+      <input type="hidden" name="task_id"    id="share-task-id">
+
+      <div style="background:var(--purple-light);border:1px solid #c7d2fe;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--purple)">
+        <b id="share-item-name"></b>
+      </div>
+
+      <div class="form-group">
+        <label>Kirim ke</label>
+        <select name="to_friend" id="share-to-friend" required>
+          <option value="">— Pilih teman —</option>
+          <?php foreach ($friends_list as $f): ?>
+            <option value="<?= $f['id'] ?>"><?= e($f['full_name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Pesan (opsional)</label>
+        <input type="text" name="share_msg" placeholder="Contoh: Ini catatan yang tadi kita bahas..." maxlength="255">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" onclick="closeModal('modal-share')">Batal</button>
+        <button type="submit" id="share-submit-btn" class="btn primary">Kirim</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')})})
 
 function previewImg(input){
-  const prev = document.getElementById('img-preview');
-  if(input.files && input.files[0]){
-    const r = new FileReader();
-    r.onload = e => { prev.src = e.target.result; prev.classList.add('show'); };
-    r.readAsDataURL(input.files[0]);
-  } else { prev.classList.remove('show'); }
+  const prev=document.getElementById('img-preview');
+  if(input.files&&input.files[0]){const r=new FileReader();r.onload=e=>{prev.src=e.target.result;prev.classList.add('show')};r.readAsDataURL(input.files[0])}
+  else prev.classList.remove('show')
 }
 
-function openLightbox(src){
-  document.getElementById('lightbox-img').src = src;
-  document.getElementById('lightbox').classList.add('open');
+function openLightbox(src){document.getElementById('lightbox-img').src=src;document.getElementById('lightbox').classList.add('open')}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open')}
+
+function openShareModal(type, id, name) {
+  document.getElementById('share-type').value = type;
+  document.getElementById('share-note-id').value = type==='note' ? id : '';
+  document.getElementById('share-task-id').value = type==='task' ? id : '';
+  document.getElementById('share-item-name').textContent = (type==='note' ? 'Catatan: ' : 'Tugas: ') + name;
+  document.getElementById('share-modal-title').textContent = type==='note' ? 'Kirim Catatan ke Teman' : 'Kirim Tugas ke Teman';
+  // Set hidden input name sesuai type supaya PHP bisa baca
+  document.querySelector('#modal-share [name="note_id"]').name = type==='note' ? 'note_id' : 'note_id_unused';
+  document.querySelector('#modal-share [name^="task_id"]').name = type==='task' ? 'task_id' : 'task_id_unused';
+  document.querySelector('#modal-share [type="submit"]').name = type==='note' ? 'share_note' : 'share_task';
+  openModal('modal-share');
 }
-function closeLightbox(){ document.getElementById('lightbox').classList.remove('open'); }
 </script>
 </body>
 </html>

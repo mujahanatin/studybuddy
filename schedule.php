@@ -69,6 +69,7 @@ $today_idx = (date('N') - 1);
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Jadwal — StudyBuddy</title>
 <link rel="stylesheet" href="assets/css/main.css">
+<script src="assets/js/notif.js" defer></script>
 <style>
 .schedule-wrap{overflow-x:auto}
 .schedule-table{width:100%;border-collapse:collapse;min-width:680px}
@@ -103,6 +104,7 @@ $today_idx = (date('N') - 1);
     <div class="topbar">
       <h1>🗓️ Jadwal Kuliah</h1>
       <div class="topbar-right">
+        <div class="notif-bell-wrap" id="notif-bell-wrap"></div>
         <button class="btn primary" onclick="openModal('modal-add')">+ Tambah Jadwal</button>
         <?= avatarHtml($_SESSION["full_name"], mysqli_fetch_assoc(mysqli_query($conn,"SELECT avatar FROM users WHERE id=$uid"))["avatar"] ?? null, 36) ?>
       </div>

@@ -92,7 +92,7 @@ $sent = mysqli_fetch_all(mysqli_query($conn,
      FROM friends f JOIN users u ON u.id=f.friend_id
      WHERE f.user_id=$uid AND f.status='pending' ORDER BY f.created_at DESC"), MYSQLI_ASSOC);
 
-$pe_map = ['Amink'=>'🥚','Ponyo'=>'🐣','Shuihi'=>'🐥','Felix'=>'🦁'];
+$pe_map = ['amink'=>'🥚','ponyo'=>'🐣','shuihi'=>'🐥','felix'=>'🐦'];
 [$msg_type,$msg_text] = $msg ? explode(':',$msg,2) : ['',''];
 
 function avatarColor($str) { return '#'.substr(md5($str),0,6); }
@@ -104,6 +104,7 @@ function avatarInit($str) { return strtoupper(substr($str,0,2)); }
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Teman — StudyBuddy</title>
 <link rel="stylesheet" href="assets/css/main.css">
+<script src="assets/js/notif.js" defer></script>
 <style>
 .tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--border)}
 .tab-btn{padding:10px 20px;font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-2px;transition:all .15s;display:flex;align-items:center;gap:6px}
@@ -135,6 +136,7 @@ function avatarInit($str) { return strtoupper(substr($str,0,2)); }
     <div class="topbar">
       <h1>👥 Teman</h1>
       <div class="topbar-right">
+        <div class="notif-bell-wrap" id="notif-bell-wrap"></div>
         <button class="btn primary" onclick="switchTab('search')">+ Cari Teman</button>
         <?= avatarHtml($_SESSION["full_name"], mysqli_fetch_assoc(mysqli_query($conn,"SELECT avatar FROM users WHERE id=$uid"))["avatar"] ?? null, 36) ?>
       </div>
@@ -163,7 +165,7 @@ function avatarInit($str) { return strtoupper(substr($str,0,2)); }
         <?php if (empty($friends)): ?>
           <div class="empty-state"><div class="ico">👀</div><p>Belum ada teman.<br>Gunakan tab <b>Cari Teman</b> untuk mencari teman!</p></div>
         <?php else: foreach ($friends as $f):
-          $pe = $pe_map[$f['pet_stage']??'Amink']??'🥚'; ?>
+          $pe = $pe_map[$f['pet_stage']??'egg']??'🥚'; ?>
           <div class="friend-card">
             <div class="f-avatar" style="background:<?= avatarColor($f['username']) ?>"><?= avatarInit($f['full_name']) ?></div>
             <div>
@@ -176,7 +178,7 @@ function avatarInit($str) { return strtoupper(substr($str,0,2)); }
               <?php endif; ?>
             </div>
             <div class="f-actions">
-              <a href="chat.php?with=<?= $f['id'] ?>" class="btn primary sm">💬 Chat</a>
+              <a href="chat.php?with=<?= $f['id'] ?>" class="btn primary sm">Chat</a>
               <form method="POST" onsubmit="return confirm('Hapus <?= e(addslashes($f['full_name'])) ?> dari teman?')">
                 <input type="hidden" name="remove_friend" value="1">
                 <input type="hidden" name="friend_id" value="<?= $f['id'] ?>">
@@ -194,11 +196,11 @@ function avatarInit($str) { return strtoupper(substr($str,0,2)); }
           <button type="submit" class="btn primary">Cari</button>
         </form>
         <?php if ($search_query && empty($search_results)): ?>
-          <div class="empty-state"><div class="ico">🔍</div><p>Tidak ada pengguna "<b><?= e($search_query) ?></b>"</p></div>
+          <div class="empty-state"><div class="ico"></div><p>Tidak ada pengguna "<b><?= e($search_query) ?></b>"</p></div>
         <?php elseif (!$search_query): ?>
-          <div class="empty-state"><div class="ico">🔍</div><p>Masukkan nama atau username teman yang ingin dicari</p></div>
+          <div class="empty-state"><div class="ico"></div><p>Masukkan nama atau username</p></div>
         <?php else: foreach ($search_results as $u):
-          $pe = $pe_map[$u['pet_stage']??'Amink']??'🥚'; ?>
+          $pe = $pe_map[$u['pet_stage']??'egg']??'🥚'; ?>
           <div class="friend-card">
             <div class="f-avatar" style="background:<?= avatarColor($u['username']) ?>"><?= avatarInit($u['full_name']) ?></div>
             <div>
@@ -215,7 +217,7 @@ function avatarInit($str) { return strtoupper(substr($str,0,2)); }
               <?php else: ?>
                 <form method="POST">
                   <input type="hidden" name="target_id" value="<?= $u['id'] ?>">
-                  <button type="submit" name="send_request" class="btn primary sm">+ Tambah Teman</button>
+                  <button type="submit" name="send_request" class="btn primary sm">Tambah Teman</button>
                 </form>
               <?php endif; ?>
             </div>
@@ -226,7 +228,7 @@ function avatarInit($str) { return strtoupper(substr($str,0,2)); }
       <!-- Permintaan masuk -->
       <div class="tab-content" id="tab-requests">
         <?php if (empty($requests)): ?>
-          <div class="empty-state"><div class="ico">📭</div><p>Tidak ada permintaan pertemanan masuk.</p></div>
+          <div class="empty-state"><div class="ico"></div><p>Tidak ada permintaan pertemanan masuk.</p></div>
         <?php else: foreach ($requests as $r): ?>
           <div class="req-card">
             <div class="f-avatar" style="background:<?= avatarColor($r['username']) ?>"><?= avatarInit($r['full_name']) ?></div>
@@ -252,7 +254,7 @@ function avatarInit($str) { return strtoupper(substr($str,0,2)); }
       <!-- Permintaan terkirim -->
       <div class="tab-content" id="tab-sent">
         <?php if (empty($sent)): ?>
-          <div class="empty-state"><div class="ico">📤</div><p>Belum ada permintaan yang dikirim.</p></div>
+          <div class="empty-state"><div class="ico"></div><p>Belum ada permintaan yang dikirim.</p></div>
         <?php else: foreach ($sent as $s): ?>
           <div class="sent-card">
             <div class="f-avatar" style="background:<?= avatarColor($s['username']) ?>"><?= avatarInit($s['full_name']) ?></div>
